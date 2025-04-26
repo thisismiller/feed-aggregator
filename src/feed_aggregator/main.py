@@ -6,6 +6,7 @@ import requests
 import sys
 import yaml
 import jinja2
+import importlib
 from lxml import etree
 
 NAMESPACES = {
@@ -140,10 +141,23 @@ def matches_posts(spec, entry):
 
     return False
 
+def get_template(filename):
+    try:
+        # When used as a package
+        return importlib.resources.files("feed_aggregator").joinpath(filename).read_text()
+    except (ImportError, TypeError):
+        # Fallback for direct execution
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        template_path = os.path.join(current_dir, filename)
+        if not os.path.exists(template_path):
+            return None
+        with open(template_path, "r") as f:
+            return f.read()
+
 def posts_to_atom(site_config, posts, f):
     rfc3339now = isoformat_to_rfc3339(datetime.datetime.now().isoformat())
     env = jinja2.Environment(
-        loader=jinja2.FileSystemLoader("."),
+        loader=jinja2.FunctionLoader(get_template),
         autoescape=jinja2.select_autoescape(["html", "xml"])
     )
     atom_template = env.get_template("atom.jinja2")
@@ -152,7 +166,7 @@ def posts_to_atom(site_config, posts, f):
 
 def posts_to_html(site_config, posts, f):
     env = jinja2.Environment(
-        loader=jinja2.FileSystemLoader("."),
+        loader=jinja2.FunctionLoader(get_template),
         autoescape=jinja2.select_autoescape(["html", "xml"])
     )
     html_template = env.get_template("html.jinja2")
