@@ -180,6 +180,7 @@ def parse_args(argv):
     parser.add_argument('--atom', help="Output filename for combined atom feed")
     parser.add_argument('--html', help="Output filename for html site")
     parser.add_argument('--debug', action='store_true')
+    parser.add_argument('--css', help="Output filename for css stylesheet")
     return parser.parse_args(argv)
 
 def main(argv):
@@ -226,7 +227,10 @@ def main(argv):
         posts_to_atom(config['site'], aggregated_posts, open(args.atom, 'w'))
     if args.html is not None:
         posts_to_html(config['site'], aggregated_posts, open(args.html, 'w'))
-
+    if args.css:
+        with open(args.css, 'w') as f:
+            f.write(get_template('style.css'))
+    return 0
 
 def main_cli():
     main(sys.argv[1:])
