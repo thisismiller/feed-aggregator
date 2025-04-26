@@ -1,0 +1,5 @@
+feeds.yaml
+software-internals-feeds.yaml
+dist/
+*.egg-info/
+__pycache__
