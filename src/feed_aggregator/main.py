@@ -223,6 +223,11 @@ def main(argv):
 
     aggregated_posts.sort(key=lambda x: datetime.datetime.fromisoformat(x.published))
     aggregated_posts.reverse()
+    max_age_days = config['site'].get('max_age_days')
+    if max_age_days is not None:
+        cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=max_age_days)
+        aggregated_posts = [p for p in aggregated_posts
+                            if datetime.datetime.fromisoformat(p.published) >= cutoff]
     if args.atom is not None:
         posts_to_atom(config['site'], aggregated_posts, open(args.atom, 'w'))
     if args.html is not None:
