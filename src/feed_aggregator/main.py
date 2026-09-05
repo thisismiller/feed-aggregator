@@ -47,6 +47,12 @@ def isoformat_to_rfc3339(isofmt):
         isofmt = isofmt + 'Z'
     return isofmt
 
+def parse_published_datetime(published):
+    date = datetime.datetime.fromisoformat(published)
+    if date.tzinfo is None:
+        return date.replace(tzinfo=datetime.timezone.utc)
+    return date
+
 def extract_rss_feedsource(feed):
     feed = feed.find('channel')
     title = feed.find('title').text
@@ -221,13 +227,13 @@ def main(argv):
                 if feedtype == 'rss': aggregated_posts.append(extract_rss_post(feedsource, entry))
                 if feedtype == 'atom': aggregated_posts.append(extract_atom_post(feedsource, entry))
 
-    aggregated_posts.sort(key=lambda x: datetime.datetime.fromisoformat(x.published))
+    aggregated_posts.sort(key=lambda x: parse_published_datetime(x.published))
     aggregated_posts.reverse()
     max_age_days = config['site'].get('max_age_days')
     if max_age_days is not None:
         cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=max_age_days)
         aggregated_posts = [p for p in aggregated_posts
-                            if datetime.datetime.fromisoformat(p.published) >= cutoff]
+                            if parse_published_datetime(p.published) >= cutoff]
     if args.atom is not None:
         posts_to_atom(config['site'], aggregated_posts, open(args.atom, 'w'))
     if args.html is not None:
